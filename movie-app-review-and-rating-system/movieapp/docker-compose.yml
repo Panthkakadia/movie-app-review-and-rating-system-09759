@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # ---- MySQL Database ----
+  mysql:
+    image: mysql:8.0
+    container_name: movieapp-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: movieapp
+    ports:
+      - "3307:3306"      # 3307 on host to avoid conflict with local XAMPP
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./movieapp.sql:/docker-entrypoint-initdb.d/01-seed.sql   # <-- loads your data on first start
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- Spring Boot App ----
+  app:
+    build: .
+    container_name: movieapp
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/movieapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      TMDB_API_KEY: ${TMDB_API_KEY:-1373c77ba847af5163fcfffe7172bac4}
+      SERVER_PORT: 8088
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

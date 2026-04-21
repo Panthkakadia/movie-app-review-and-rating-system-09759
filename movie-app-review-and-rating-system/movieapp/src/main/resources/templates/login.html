@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — MovieApp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-card animate-scale-in">
+        <div class="text-center mb-4">
+            <a th:href="@{/}" class="logo"><i class="bi bi-film me-2"></i>MovieApp</a>
+            <p style="color:var(--text-secondary);" class="mt-2 mb-0">Welcome back! Sign in to your account.</p>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success py-2 text-center" style="font-size:0.88rem;">
+            <i class="bi bi-check-circle me-1"></i><span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${param.error}" class="alert alert-danger py-2 text-center" style="font-size:0.88rem;">
+            <i class="bi bi-exclamation-circle me-1"></i>Invalid username or password.
+        </div>
+        <div th:if="${param.logout}" class="alert alert-info py-2 text-center" style="font-size:0.88rem;">
+            <i class="bi bi-box-arrow-right me-1"></i>You have been logged out.
+        </div>
+        <div th:if="${param.denied}" class="alert alert-warning py-2 text-center" style="font-size:0.88rem;">
+            <i class="bi bi-shield-exclamation me-1"></i>Access denied.
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label class="form-label" for="username">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" id="username" name="username" class="form-control"
+                           placeholder="Enter your username" required autofocus>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="password">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" id="password" name="password" class="form-control"
+                           placeholder="Enter your password" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mt-2">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+            </button>
+        </form>
+
+        <div class="auth-divider"><span>or</span></div>
+        <div class="text-center">
+            <span style="color:var(--text-muted);">Don't have an account?</span>
+            <a th:href="@{/register}" class="fw-semibold text-decoration-none ms-1">Sign Up</a>
+        </div>
+        <div class="text-center mt-3">
+            <a th:href="@{/}" class="text-decoration-none" style="font-size:0.82rem; color:var(--text-muted);">
+                <i class="bi bi-arrow-left me-1"></i>Back to Browse
+            </a>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

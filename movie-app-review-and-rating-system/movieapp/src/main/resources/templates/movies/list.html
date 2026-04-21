@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Movies — MovieApp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<main class="container py-4">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-end">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-collection-play me-2" style="color:var(--accent-gold);"></i>Browse Movies</h2>
+            <span class="result-count" th:text="${totalItems} + ' movies found'"></span>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-filter-card mb-4 animate-fade-in">
+        <form method="get" th:action="@{/movies}" id="filterForm">
+            <div class="row g-3">
+                <!-- Search Input -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="keyword" class="form-control"
+                               placeholder="Search by title..."
+                               th:value="${currentKeyword}">
+                    </div>
+                </div>
+                <!-- Genre Filter -->
+                <div class="col-md-2">
+                    <select name="genre" class="form-select">
+                        <option value="">All Genres</option>
+                        <option th:each="g : ${genres}" th:value="${g}" th:text="${g}"
+                                th:selected="${g == currentGenre}"></option>
+                    </select>
+                </div>
+                <!-- Year Filter -->
+                <div class="col-md-2">
+                    <select name="year" class="form-select">
+                        <option value="">All Years</option>
+                        <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                                th:selected="${y == currentYear}"></option>
+                    </select>
+                </div>
+                <!-- Min Rating Filter -->
+                <div class="col-md-2">
+                    <select name="minRating" class="form-select">
+                        <option value="">Any Rating</option>
+                        <option value="4.0" th:selected="${currentMinRating == 4.0}">4+ Stars</option>
+                        <option value="3.0" th:selected="${currentMinRating == 3.0}">3+ Stars</option>
+                        <option value="2.0" th:selected="${currentMinRating == 2.0}">2+ Stars</option>
+                    </select>
+                </div>
+                <!-- Sort -->
+                <div class="col-md-2">
+                    <select name="sort" class="form-select">
+                        <option value="title-asc"   th:selected="${currentSort == 'title-asc'}">A — Z</option>
+                        <option value="title-desc"  th:selected="${currentSort == 'title-desc'}">Z — A</option>
+                        <option value="rating-desc" th:selected="${currentSort == 'rating-desc'}">Highest Rated</option>
+                        <option value="year-desc"   th:selected="${currentSort == 'year-desc'}">Newest</option>
+                        <option value="year-asc"    th:selected="${currentSort == 'year-asc'}">Oldest</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-funnel me-1"></i>Apply Filters
+                </button>
+                <a th:href="@{/movies}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle me-1"></i>Clear All
+                </a>
+            </div>
+        </form>
+
+        <!-- Active Filter Chips -->
+        <div class="mt-3 d-flex flex-wrap gap-2 align-items-center"
+             th:if="${currentKeyword != null || currentGenre != null || currentYear != null || currentMinRating != null}">
+            <span style="font-size:0.82rem; color:var(--text-muted);" class="me-1">Active:</span>
+            <span th:if="${currentKeyword != null}" class="filter-chip">
+                <i class="bi bi-search" style="font-size:0.7rem;"></i>
+                <span th:text="${currentKeyword}"></span>
+                <a class="remove-chip" href="#" onclick="removeFilter('keyword');">&times;</a>
+            </span>
+            <span th:if="${currentGenre != null}" class="filter-chip">
+                <i class="bi bi-tag" style="font-size:0.7rem;"></i>
+                <span th:text="${currentGenre}"></span>
+                <a class="remove-chip" href="#" onclick="removeFilter('genre');">&times;</a>
+            </span>
+            <span th:if="${currentYear != null}" class="filter-chip">
+                <i class="bi bi-calendar" style="font-size:0.7rem;"></i>
+                <span th:text="${currentYear}"></span>
+                <a class="remove-chip" href="#" onclick="removeFilter('year');">&times;</a>
+            </span>
+            <span th:if="${currentMinRating != null}" class="filter-chip">
+                <i class="bi bi-star-fill" style="font-size:0.7rem;"></i>
+                <span th:text="${currentMinRating}"></span>+
+                <a class="remove-chip" href="#" onclick="removeFilter('minRating');">&times;</a>
+            </span>
+        </div>
+    </div>
+
+    <!-- Movie Grid -->
+    <div class="row g-4 stagger-children" th:if="${!movies.isEmpty()}">
+        <div class="col-6 col-md-4 col-lg-3" th:each="movie : ${movies}">
+            <a th:href="@{/movies/{id}(id=${movie.id})}" class="text-decoration-none">
+                <div class="card movie-card">
+                    <div style="overflow:hidden;">
+                        <img th:if="${movie.posterUrl != null}" th:src="${movie.posterUrl}"
+                             th:alt="${movie.title}" class="card-img-top">
+                        <div th:if="${movie.posterUrl == null}" class="poster-placeholder">
+                            <span th:text="${movie.title}"></span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title" th:text="${movie.title}">Title</h6>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="stars">
+                                <span th:each="i : ${#numbers.sequence(1,5)}"
+                                      class="star"
+                                      th:classappend="${i <= movie.averageRating} ? ' filled' : ''">&#9733;</span>
+                            </div>
+                            <small style="color:var(--text-muted); font-size:0.8rem;"
+                                   th:text="${movie.averageRating} + ' (' + ${movie.reviewCount} + ')'"></small>
+                        </div>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <span class="genre-badge" th:text="${movie.genre}"></span>
+                            <span class="genre-badge" th:text="${movie.releaseYear}"></span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${movies.isEmpty()}" class="text-center py-5 animate-fade-in">
+        <i class="bi bi-film" style="font-size:3rem; color:var(--text-muted);"></i>
+        <h5 class="mt-3" style="color:var(--text-secondary);">No movies found</h5>
+        <p style="color:var(--text-muted);">Try adjusting your search or filters.</p>
+        <a th:href="@{/movies}" class="btn btn-primary btn-sm">Clear Filters</a>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}" class="mt-5 d-flex justify-content-center animate-fade-in">
+        <ul class="pagination-custom">
+            <!-- Previous -->
+            <li th:classappend="${!hasPrevious} ? ' disabled' : ''">
+                <a th:href="@{/movies(keyword=${currentKeyword}, genre=${currentGenre}, year=${currentYear}, minRating=${currentMinRating}, sort=${currentSort}, page=${currentPage - 1})}"
+                   class="page-link-custom">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            <!-- Page numbers -->
+            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${i == currentPage} ? ' active' : ''">
+                <a th:href="@{/movies(keyword=${currentKeyword}, genre=${currentGenre}, year=${currentYear}, minRating=${currentMinRating}, sort=${currentSort}, page=${i})}"
+                   class="page-link-custom"
+                   th:text="${i + 1}">1</a>
+            </li>
+            <!-- Next -->
+            <li th:classappend="${!hasNext} ? ' disabled' : ''">
+                <a th:href="@{/movies(keyword=${currentKeyword}, genre=${currentGenre}, year=${currentYear}, minRating=${currentMinRating}, sort=${currentSort}, page=${currentPage + 1})}"
+                   class="page-link-custom">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Result info -->
+    <div th:if="${totalPages > 1}" class="text-center mt-2">
+        <small style="color:var(--text-muted);">
+            Page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">5</span>
+            &middot; <span th:text="${totalItems}">60</span> movies total
+        </small>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function removeFilter(fieldName) {
+        const form = document.getElementById('filterForm');
+        const field = form.querySelector('[name="' + fieldName + '"]');
+        if (field.tagName === 'SELECT') { field.selectedIndex = 0; }
+        else { field.value = ''; }
+        form.submit();
+    }
+</script>
+</body>
+</html>
